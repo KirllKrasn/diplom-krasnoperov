@@ -1,124 +1,115 @@
 <?php
-session_start();
-require '../config.php';
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    header("Location: ../login.php");
-    exit;
+session_start();
+require '../dbcon.php';
+require '../vendor/autoload.php';
+
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
+function massInsertUsers(){
+
+
+
 }
+
 ?>
+
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/custom.css">
-    <title>Панель администратора</title>
-    <style>
-        .btn.rounded-0 {
-            border-radius: 0 !important;
-        }
-        .card {
-            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.075);
-            margin-bottom: 1.5rem;
-        }
-        .card-header {
-            font-weight: 600;
-            background-color: #f8f9fa;
-        }
-    </style>
+    <title>Дашборд</title>
+    <link rel="stylesheet" href="..\bootstrap\css\bootstrap.css">
+    <link rel="stylesheet" href="..\bootstrap\css\bootstrap-grid.css">
 </head>
-<body class="bg-light">
-    <div class="container py-4">
-        <h2 class="mb-4 text-center">Панель администратора</h2>
-
-        <div class="card">
-            <div class="card-header">👁️ Просмотр результатов студента</div>
-            <div class="card-body">
-                <p class="text-muted mb-3">Выберите группу и студента, чтобы увидеть детальную расшифровку теста.</p>
-                <a href="functions/view_results.php" class="btn btn-primary rounded-0">Открыть просмотр</a>
-            </div>
+<body>
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+  <div class="container-fluid">
+    <img class="img-thumbnail" style="max-width: 200px;" src="../imgs/nav-logo.png" alt="">
+    <h3>Панель администратора психологиского тестирования Кеттелла</h1>
+  </div>
+</nav>
+<div class="container">
+  <div class="card my-5">
+    <div class="card-body min-vh">
+      <div class="d-flex align-items-start">
+        <div class="nav flex-column nav-pills me-3" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+          <button class="nav-link active" id="v-pills-students-tab" data-bs-toggle="pill" data-bs-target="#v-pills-students" type="button" role="tab" aria-controls="v-pills-students" aria-selected="true">Студенты</button>
+          <button class="nav-link" id="v-pills-activeTest-tab" data-bs-toggle="pill" data-bs-target="#v-pills-activeTest" type="button" role="tab" aria-controls="v-pills-activeTest" aria-selected="false">Тесты</button>
+          <button class="nav-link" id="v-pills-reports-tab" data-bs-toggle="pill" data-bs-target="#v-pills-reports" type="button" role="tab" aria-controls="v-pills-reports" aria-selected="false">Генератор отчётов</button>
         </div>
-
-        <div class="card">
-            <div class="card-header">📊 Работа с Excel-файлами</div>
-            <div class="card-body">
-                <form action="functions/user_insert.php" method="post" enctype="multipart/form-data" class="mb-3">
-                    <label for="userfile" class="form-label">Загрузите список пользователей (.xlsx)</label>
-                    <input class="form-control" type="file" id="userfile" name="userfile" accept=".xlsx" required>
-                    <button type="submit" class="btn btn-success rounded-0 mt-2">Импортировать Excel</button>
-                </form>
-                <p>После импорта, будет автоматически сгенерирован файл с паролями для прохождения теста.</p>
-            </div>
-        </div>
-
-        <div class="card mb-4">
-            <div class="card-header">Сгенерировать отчёт по группе</div>
-            <div class="card-body">
-                <?php
-                $groups = $pdo->query("SELECT id, name FROM student_groups ORDER BY name")->fetchAll();
-                ?>
-                <form method="GET" action="functions/export_results.php" class="row g-2">
-                    <div class="col-md-8">
-                        <select name="group_id" class="form-select">
-                            <option value="">Все группы</option>
-                            <?php foreach ($groups as $group): ?>
-                                <option value="<?= $group['id'] ?>"><?= htmlspecialchars($group['name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <button type="submit" class="btn btn-info rounded-0 w-100">Экспорт по группе</button>
-                    </div>
-                </form>
-                <small class="text-muted">Выберите группу, чтобы экспортировать только её результаты.</small>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">🗑️ Удаление группы</div>
-            <div class="card-body">
-                <form action="functions/delete_group.php" method="POST" onsubmit="return confirm('❗ ВСЯ группа (студенты + результаты) будет удалена НАВСЕГДА. Продолжить?');">
-                    <div class="mb-3">
-                        <label for="group_id" class="form-label">Выберите группу</label>
-                        <select name="group_id" id="group_id" class="form-select" required>
-                            <option value="">— Выберите группу —</option>
-                            <?php
-                            $groups = $pdo->query("SELECT id, name FROM student_groups ORDER BY name")->fetchAll();
-                            foreach ($groups as $group): ?>
-                                <option value="<?= (int)$group['id'] ?>">
-                                    <?= htmlspecialchars($group['name']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-danger rounded-0">Удалить группу</button>
-                </form>
-                <p class="text-muted mt-2">
-                    <small>⚠️ Удаляются: группа, все её студенты и все их результаты тестирования.</small>
-                </p>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">🔧 Прочие действия</div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
-                    <a href="functions/export_results.php" class="btn btn-primary rounded-0">Экспортировать все результаты</a>
-                    <a href="clear_results.php" class="btn btn-danger rounded-0"
-                       onclick="return confirm('Все данные будут удалены без возможности восстановления. Продолжить?');">
-                        Очистить результаты
-                    </a>
-                    <a href="functions/example.xlsx" class="btn btn-outline-secondary rounded-0">Пример Excel файла</a>
+        <div class="tab-content" id="v-pills-tabContent">
+          <div class="tab-pane fade show active" id="v-pills-students" role="tabpanel" aria-labelledby="v-pills-students-tab">
+            <form method="POST">
+              <div class="card w-100">
+                <div class="card-header">
+                  Добавить студентов 
                 </div>
-            </div>
-        </div>
+                <div class="card-body">
+                  <form action="functions/user_insert.php" method="post" enctype="multipart/form-data" class="mb-3">
+                      <label for="userfile" class="form-label">Загрузите список пользователей (.xlsx/.ods)</label>
+                      <input class="form-control" type="file" id="userfile" name="userfile" accept=".xlsx" required>
+                      <button type="submit" class="btn btn-success rounded-0 mt-2">Добавить пользователей</button>
+                  </form>
+                  <p>После импорта, будет автоматически сгенерирован файл с паролями для прохождения теста.</p>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="tab-pane fade" id="v-pills-activeTest" role="tabpanel" aria-labelledby="v-pills-activeTest-tab">
+            <form method="POST">
+                <div class="card mb-3">
+                  <div class="card-header bg-light fw-bold">Фильтры</div>
+                  <div class="card-body">
+                    <form method="GET" action="">
+                      <div class="row g-3">
+                        <div class="col-md-4">
+                          <label for="filter_fio" class="form-label">ФИО студента</label>
+                          <input type="text" class="form-control" id="filter_fio" name="filter_fio" 
+                                placeholder="Например: Иванов А.А." 
+                                value="<?= htmlspecialchars($_GET['filter_fio'] ?? '') ?>">
+                        </div>
 
-        <div class="text-center mt-3">
-            <a href="../logout.php" class="btn btn-outline-dark rounded-0">Выйти</a>
+                        <div class="col-md-4">
+                          <label for="filter_group" class="form-label">Группа</label>
+                          <input type="text" class="form-control" id="filter_group" name="filter_group" 
+                                placeholder="Например: ПС-23" 
+                                value="<?= htmlspecialchars($_GET['filter_group'] ?? '') ?>">
+                        </div>
+
+                        <div class="col-md-4">
+                          <label for="filter_active" class="form-label">Статус тестирования</label>
+                          <select class="form-select" id="filter_active" name="filter_active">
+                            <option value="">Все</option>
+                            <option value="1" <?= ($_GET['filter_active'] ?? '') === '1' ? 'selected' : '' ?>>Есть</option>
+                            <option value="0" <?= ($_GET['filter_active'] ?? '') === '0' ? 'selected' : '' ?>>Нет</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div class="mt-3 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">Применить фильтры</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+            </form>
+          </div>
+          <div class="tab-pane fade" id="v-pills-reports" role="tabpanel" aria-labelledby="v-pills-reports-tab">
+            <form method="POST">
+
+            </form>
+          </div>
         </div>
+      </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </div>
+</div>
+
+<script src="../bootstrap/js/bootstrap.bundle.js"></script>
+
 </body>
 </html>
