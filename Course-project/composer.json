@@ -1,6 +1,5 @@
 {
-    "name": "gckil/course-project",
     "require": {
-        "phpoffice/phpspreadsheet": "^1.30"
+        "phpoffice/phpspreadsheet": "^2.1"
     }
 }
