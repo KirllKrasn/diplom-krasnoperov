@@ -1,68 +1,53 @@
 <?php
-$_SESSION = array();
-session_start();
-
-require __DIR__ . "/functions/accounting.php";
-require_once __DIR__ . '/dbcon.php';
-$message = "";
-
-if($_SERVER["REQUEST_METHOD"] === "POST"){
-    $login = $_POST['login'];
-    $password = trim($_POST['password']);
-
-    $user = authentification($login, $password);
-    if(empty($login) || empty($password)){
-        $message = "Введите логин и пароль!";
-    }else{
-        if($user){
-            $_SESSION['user'] = ['user_id' => $user['user_id'], 'role' => $user['role_id']];
-            if($_SESSION['user']['role'] == 1 | $_SESSION['user']['role'] == 2){
-                header("Location: admin/admin_dashboard.php");
-            } else if(isActiveTest($_SESSION['user']['user_id'])){
-                header("Location: users/kettel-test.php");
-            } else{
-                $message = "Для вас нет активных тестирований!";
-            }
-        }else{
-            $message = "Неправильный логин или пароль!";
-        }
+    session_start();
+    require 'config.php';
+    if (!isset($_SESSION['role'])) {
+        header("Location: login.php");
+        exit;
     }
-}
+
+    if ($_SESSION['role'] === 'admin') {
+        header("Location: admin/admin_dashboard.php");
+    } elseif ($_SESSION['role'] === 'user') {
+        header("Location: psychotest.php");
+    } else {
+        header("Location: login.php");
+    }
+
+    exit;
+
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Главная страница</title>
-    <link rel="stylesheet" href="bootstrap\css\bootstrap.css">
-    <link rel="stylesheet" href="bootstrap\css\bootstrap-grid.css">
+    <title>16PF — Психологическое тестирование</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/custom.css">
 </head>
 <body>
+    <div class="container mt-5">
+        <h1>Тест Кеттелла 16PF (Форма А)</h1>
+        <p class="lead">
+            Стандартизованный личностный опросник для оценки 16 ключевых черт личности.  
+            Предназначен для лиц с образованием не ниже 8–9 классов.
+        </p>
 
-<div class="d-flex align-items-center justify-content-center min-vh-100 bg-light">
-    <div class="card w-100 shadow-sm" style="max-width: 400px;">
-        <div class="card-body">
-            <p class="h5 mb-3">Добро пожаловать!</p>
-            <form method="POST">
-                <div class="mb-3">
-                    <label for="InputLogin" class="form-label">Логин</label>
-                    <input type="text" class="form-control" name="login" id="InputLogin">
-                </div>
-                <div class="mb-3">
-                    <label for="InputPassword" class="form-label">Пароль</label>
-                    <input type="password" class="form-control" name="password" id="InputPassword">
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Войти</button>
-                <?php echo $message;?>
-            </form>
-        </div>
+        <?php
+        session_start();
+        if (isset($_SESSION['role'])) {
+            if ($_SESSION['role'] === 'admin') {
+                echo '<a href="admin/admin_dashboard.php" class="btn btn-primary">Панель администратора</a>';
+            } else {
+                echo '<a href="psychotest.php" class="btn btn-success">Пройти тест</a>';
+                echo ' | <a href="logout.php">Выйти</a>';
+            }
+        } else {
+            echo '<a href="login.php" class "btn btn-primary">Войти</a>';
+        }
+        ?>
     </div>
-
-</div>
-
-<script src="jquery-4.0.0.js"></script>
-
 </body>
 </html>
