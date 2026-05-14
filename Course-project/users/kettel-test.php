@@ -1,5 +1,11 @@
 <?php
 session_start();
+require '../dbcon.php';
+
+if(empty($_SESSION['user'])){
+    $_SESSION['error'] = "Вы не вошли в аккаунт!";
+    header("Location: ../error.php");
+}
 
 ?>
 
@@ -17,7 +23,7 @@ session_start();
 
 <div class="container">
     <div class="row">
-        <form action="processing.php">
+        <form action="processing.php" method="POST">
         <div class="col qstyle">
             <div class="card border border-primary shadow">
                 <div class="card-body">
@@ -4333,6 +4339,8 @@ $('form').on('submit', function(e) {
         if ($radios.filter(':checked').length === 0) {
             $radios.closest('.card').removeClass('border-primary').addClass('border-danger');
             hasError = true;
+        } else{
+            $radios.closest('.card').removeClass('border-danger').addClass('border-primary');
         }
     }
     

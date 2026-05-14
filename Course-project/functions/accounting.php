@@ -11,8 +11,8 @@ function authentification($login, $password){
     if(!$result){
         return false;
     }
-
-    if($password === $result['password']){
+    
+    if(password_verify($password, $result['password'])){
         return [
             'user_id' => $result['user_id'],
             'role_id' => $result['role_id']
@@ -37,4 +37,8 @@ function isActiveTest($userId){
     return false;
 }
 
+function autologout(){
+    header("Refresh: 120; url=logout.php");
+    
+}
 ?>

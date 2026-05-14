@@ -1,6 +1,7 @@
 <?php
 $_SESSION = array();
 session_start();
+$_SESSION['error'] = null;
 
 require __DIR__ . "/functions/accounting.php";
 require_once __DIR__ . '/dbcon.php';
@@ -22,9 +23,12 @@ if($_SERVER["REQUEST_METHOD"] === "POST"){
                 header("Location: users/kettel-test.php");
             } else{
                 $message = "Для вас нет активных тестирований!";
+                $_SESSION['error'] = $message;
+                header("Location: error.php");
             }
         }else{
             $message = "Неправильный логин или пароль!";
+
         }
     }
 }
